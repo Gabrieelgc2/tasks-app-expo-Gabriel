@@ -107,6 +107,14 @@ export default function LoginScreen() {
     onMouseMove:  (e: any) => setGlowPos({ x: e.nativeEvent.locationX, y: e.nativeEvent.locationY }),
   } : {};
 
+  const linkHover = useRef(new Animated.Value(0)).current;
+  const linkWeb   = Platform.OS === 'web'
+    ? {
+        onMouseEnter: () => Animated.timing(linkHover, { toValue: 1, duration: 150, useNativeDriver: true }).start(),
+        onMouseLeave: () => Animated.timing(linkHover, { toValue: 0, duration: 220, useNativeDriver: true }).start(),
+      }
+    : {};
+
   const spin = logoRotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
@@ -183,12 +191,18 @@ export default function LoginScreen() {
           </Animated.View>
         </View>
 
-        <Pressable onPress={() => router.push('/signup')} style={s.link}>
-          <Text style={s.linkText}>
-            Não tem acesso?{'  '}
-            <Text style={s.linkHighlight}>CRIAR CONTA</Text>
-          </Text>
-        </Pressable>
+        <View style={[s.link, { borderRadius: 8, overflow: 'hidden' }]} {...linkWeb}>
+          <Animated.View
+            style={[StyleSheet.absoluteFillObject, { opacity: linkHover, backgroundColor: 'rgba(124,58,237,0.08)' }]}
+            pointerEvents="none"
+          />
+          <Pressable onPress={() => router.push('/signup')} style={{ paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center' }}>
+            <Text style={s.linkText}>
+              Não tem acesso?{'  '}
+              <Text style={s.linkHighlight}>CRIAR CONTA</Text>
+            </Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

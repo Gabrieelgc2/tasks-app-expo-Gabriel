@@ -17,6 +17,43 @@ const PRIORITY_COLORS: Record<string, string> = {
   Alta:  '#ff4466',
 };
 
+function HoverBtn({
+  children, style, onPress, hoverColor = 'rgba(0,212,255,0.12)',
+  disabled,
+}: {
+  children: React.ReactNode;
+  style?: any;
+  onPress?: () => void;
+  hoverColor?: string;
+  disabled?: boolean;
+}) {
+  const hoverOp  = useRef(new Animated.Value(0)).current;
+  const pressScl = useRef(new Animated.Value(1)).current;
+  const hIn  = () => Animated.timing(hoverOp,  { toValue: 1, duration: 150, useNativeDriver: true }).start();
+  const hOut = () => Animated.timing(hoverOp,  { toValue: 0, duration: 220, useNativeDriver: true }).start();
+  const pIn  = () => Animated.spring(pressScl, { toValue: 0.96, useNativeDriver: true, speed: 30 }).start();
+  const pOut = () => Animated.spring(pressScl, { toValue: 1,    useNativeDriver: true, speed: 30 }).start();
+  const web  = Platform.OS === 'web' ? { onMouseEnter: hIn, onMouseLeave: hOut } : {};
+  return (
+    <Animated.View style={{ transform: [{ scale: pressScl }] }}>
+      <Pressable
+        style={[style, { overflow: 'hidden' }]}
+        onPress={onPress}
+        onPressIn={pIn}
+        onPressOut={pOut}
+        disabled={disabled}
+        {...web}
+      >
+        <Animated.View
+          style={[StyleSheet.absoluteFillObject, { opacity: hoverOp, backgroundColor: hoverColor }]}
+          pointerEvents="none"
+        />
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 export default function TasksScreen() {
   const [tasks,    setTasks]    = useState<TaskItem[]>([]);
   const [text,     setText]     = useState('');
@@ -30,12 +67,27 @@ export default function TasksScreen() {
   const [showDatePicker,    setShowDatePicker]    = useState(false);
   const [priority,          setPriority]          = useState<'Baixa' | 'Média' | 'Alta'>('Baixa');
 
-  // Animações
   const scanY      = useRef(new Animated.Value(-4)).current;
   const logoRotate = useRef(new Animated.Value(0)).current;
   const logoGlow   = useRef(new Animated.Value(0.4)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
   const modalOp    = useRef(new Animated.Value(0)).current;
+
+  // Filter pill hovers
+  const fHoverAll  = useRef(new Animated.Value(0)).current;
+  const fHoverDone = useRef(new Animated.Value(0)).current;
+  const fHoverPend = useRef(new Animated.Value(0)).current;
+  const filterHovers: Record<string, Animated.Value> = {
+    all: fHoverAll, completed: fHoverDone, pending: fHoverPend,
+  };
+
+  // Priority button hovers
+  const prHoverB = useRef(new Animated.Value(0)).current;
+  const prHoverM = useRef(new Animated.Value(0)).current;
+  const prHoverA = useRef(new Animated.Value(0)).current;
+  const priorityHovers: Record<string, Animated.Value> = {
+    Baixa: prHoverB, Média: prHoverM, Alta: prHoverA,
+  };
 
   useEffect(() => {
     getAllTasks(setTasks, setLoading);
@@ -104,17 +156,22 @@ export default function TasksScreen() {
     return true;
   });
 
-  const pending   = tasks.filter((t) => !t.completed).length;
+  const pending    = tasks.filter((t) => !t.completed).length;
   const completed_ = tasks.filter((t) =>  t.completed).length;
+
+  const makeHoverHandlers = (anim: Animated.Value) =>
+    Platform.OS === 'web'
+      ? {
+          onMouseEnter: () => Animated.timing(anim, { toValue: 1, duration: 140, useNativeDriver: true }).start(),
+          onMouseLeave: () => Animated.timing(anim, { toValue: 0, duration: 200, useNativeDriver: true }).start(),
+        }
+      : {};
 
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar style="light" />
 
-      {/* Scan line */}
       <Animated.View style={[s.scanLine, { transform: [{ translateY: scanY }] }]} pointerEvents="none" />
-
-      {/* Brilho de fundo */}
       <View style={s.glowBg} />
 
       <View style={s.container}>
@@ -151,30 +208,30 @@ export default function TasksScreen() {
             { key: 'completed', label: 'CONCLUÍDAS' },
             { key: 'pending',   label: 'PENDENTES' },
           ] as const).map(({ key, label }) => (
-            <TouchableOpacity
+            <View
               key={key}
-              style={[s.filterBtn, filter === key && s.filterBtnActive]}
-              onPress={() => setFilter(key)}
+              style={[s.filterBtn, filter === key && s.filterBtnActive, { overflow: 'hidden' }]}
+              {...makeHoverHandlers(filterHovers[key])}
             >
-              <Text style={[s.filterText, filter === key && s.filterTextActive]}>{label}</Text>
-            </TouchableOpacity>
+              <Animated.View
+                style={[StyleSheet.absoluteFillObject, { opacity: filterHovers[key], backgroundColor: 'rgba(0,212,255,0.1)' }]}
+                pointerEvents="none"
+              />
+              <TouchableOpacity style={s.filterBtnInner} onPress={() => setFilter(key)}>
+                <Text style={[s.filterText, filter === key && s.filterTextActive]}>{label}</Text>
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
         {/* Ações */}
         <View style={s.actionsRow}>
-          <Pressable
-            style={({ pressed }) => [s.btn, s.btnAdd, pressed && s.btnPressed]}
-            onPress={openModal}
-          >
-            <Text style={s.btnText}>＋ NOVA TAREFA</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [s.btn, s.btnDelete, pressed && s.btnPressed]}
-            onPress={() => setTasks([])}
-          >
-            <Text style={s.btnText}>⌫ EXCLUIR TODAS</Text>
-          </Pressable>
+          <HoverBtn style={s.btnAdd} hoverColor="rgba(255,255,255,0.14)" onPress={openModal}>
+            <Text style={[s.btnText, { color: '#000' }]}>＋ NOVA TAREFA</Text>
+          </HoverBtn>
+          <HoverBtn style={s.btnDelete} hoverColor="rgba(255,68,102,0.18)" onPress={() => setTasks([])}>
+            <Text style={[s.btnText, { color: '#ff4466' }]}>⌫ EXCLUIR TODAS</Text>
+          </HoverBtn>
         </View>
 
         {/* Lista */}
@@ -202,9 +259,9 @@ export default function TasksScreen() {
 
             <View style={s.modalHeader}>
               <Text style={s.modalTitle}>{isUpdating ? 'EDITAR TAREFA' : 'NOVA TAREFA'}</Text>
-              <TouchableOpacity onPress={closeModal}>
+              <HoverBtn style={s.modalCloseBtn} hoverColor="rgba(255,68,102,0.15)" onPress={closeModal}>
                 <Text style={s.modalClose}>✕</Text>
-              </TouchableOpacity>
+              </HoverBtn>
             </View>
 
             <Text style={s.modalLabel}>NOME</Text>
@@ -270,27 +327,38 @@ export default function TasksScreen() {
             <Text style={s.modalLabel}>PRIORIDADE</Text>
             <View style={s.priorityRow}>
               {(['Baixa', 'Média', 'Alta'] as const).map((p) => (
-                <TouchableOpacity
+                <View
                   key={p}
-                  style={[s.priorityBtn, priority === p && { borderColor: PRIORITY_COLORS[p], backgroundColor: `${PRIORITY_COLORS[p]}18` }]}
-                  onPress={() => setPriority(p)}
+                  style={[
+                    s.priorityBtn,
+                    priority === p && { borderColor: PRIORITY_COLORS[p], backgroundColor: `${PRIORITY_COLORS[p]}18` },
+                    { overflow: 'hidden' },
+                  ]}
+                  {...makeHoverHandlers(priorityHovers[p])}
                 >
-                  <Text style={[s.priorityText, priority === p && { color: PRIORITY_COLORS[p], fontWeight: '700' }]}>{p}</Text>
-                </TouchableOpacity>
+                  <Animated.View
+                    style={[StyleSheet.absoluteFillObject, { opacity: priorityHovers[p], backgroundColor: `${PRIORITY_COLORS[p]}22` }]}
+                    pointerEvents="none"
+                  />
+                  <TouchableOpacity style={s.priorityBtnInner} onPress={() => setPriority(p)}>
+                    <Text style={[s.priorityText, priority === p && { color: PRIORITY_COLORS[p], fontWeight: '700' }]}>{p}</Text>
+                  </TouchableOpacity>
+                </View>
               ))}
             </View>
 
             <View style={s.modalActions}>
-              <TouchableOpacity style={s.cancelBtn} onPress={closeModal}>
+              <HoverBtn style={s.cancelBtn} hoverColor="rgba(255,255,255,0.04)" onPress={closeModal}>
                 <Text style={s.cancelText}>CANCELAR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </HoverBtn>
+              <HoverBtn
                 style={[s.saveBtn, !text.trim() && s.saveBtnDisabled]}
+                hoverColor="rgba(255,255,255,0.14)"
                 onPress={handleSave}
                 disabled={!text.trim()}
               >
                 <Text style={s.saveText}>SALVAR</Text>
-              </TouchableOpacity>
+              </HoverBtn>
             </View>
 
           </Animated.View>
@@ -339,29 +407,28 @@ const s = StyleSheet.create({
 
   filterRow: { flexDirection: 'row', gap: 6, marginBottom: 12 },
   filterBtn: {
-    flex: 1, paddingVertical: 7, borderRadius: 8,
-    borderWidth: 1, borderColor: '#1a1a35', alignItems: 'center',
+    flex: 1, borderRadius: 8,
+    borderWidth: 1, borderColor: '#1a1a35',
     backgroundColor: '#0a0a1a',
   },
+  filterBtnInner: { paddingVertical: 7, alignItems: 'center' },
   filterBtnActive: { backgroundColor: '#00d4ff15', borderColor: '#00d4ff' },
   filterText:      { color: '#333355', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
   filterTextActive:{ color: '#00d4ff', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
 
   actionsRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  btn: {
-    flex: 1, paddingVertical: 13, borderRadius: 8, alignItems: 'center',
-    overflow: 'hidden',
-  },
   btnAdd: {
-    backgroundColor: '#00d4ff', shadowColor: '#00d4ff',
-    shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
+    flex: 1, paddingVertical: 13, borderRadius: 8, alignItems: 'center',
+    backgroundColor: '#00d4ff',
+    shadowColor: '#00d4ff', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
   },
   btnDelete: {
+    flex: 1, paddingVertical: 13, borderRadius: 8, alignItems: 'center',
     backgroundColor: 'rgba(255,68,102,0.1)', borderWidth: 1, borderColor: '#ff4466',
     shadowColor: '#ff4466', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 8,
   },
-  btnPressed: { opacity: 0.75, transform: [{ scale: 0.97 }] },
-  btnText: { fontWeight: '900', fontSize: 11, letterSpacing: 2, color: '#000' },
+  btnText: { fontWeight: '900', fontSize: 11, letterSpacing: 2 },
 
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -375,7 +442,6 @@ const s = StyleSheet.create({
   },
   loadingText: { color: '#333355', fontSize: 11, letterSpacing: 4 },
 
-  // Modal
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(5,5,16,0.88)',
     justifyContent: 'center', alignItems: 'center',
@@ -386,30 +452,32 @@ const s = StyleSheet.create({
     shadowColor: '#00d4ff', shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15, shadowRadius: 24, elevation: 10,
   },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
-  modalTitle: { color: '#00d4ff', fontSize: 12, fontWeight: '900', letterSpacing: 4 },
-  modalClose: { color: '#333355', fontSize: 18, fontWeight: '700' },
-  modalLabel: { color: '#333355', fontSize: 9, fontWeight: '700', letterSpacing: 3, marginBottom: 6 },
+  modalHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
+  modalTitle:   { color: '#00d4ff', fontSize: 12, fontWeight: '900', letterSpacing: 4 },
+  modalCloseBtn:{ borderRadius: 6, padding: 4 },
+  modalClose:   { color: '#333355', fontSize: 18, fontWeight: '700' },
+  modalLabel:   { color: '#333355', fontSize: 9, fontWeight: '700', letterSpacing: 3, marginBottom: 6 },
   modalInput: {
     backgroundColor: '#08081a', borderWidth: 1, borderColor: '#1a1a35',
     borderRadius: 8, paddingVertical: 11, paddingHorizontal: 14,
     fontSize: 14, color: '#e0e0ff', marginBottom: 14,
   },
   modalInputActive: { borderColor: '#00d4ff' },
-  dateRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  dateRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   dateBtn: {
     flex: 1, backgroundColor: '#08081a', borderWidth: 1, borderColor: '#1a1a35',
     borderRadius: 8, paddingVertical: 11, paddingHorizontal: 14,
   },
-  dateBtnText: { color: '#e0e0ff', fontSize: 14 },
-  dateClear: { padding: 10 },
-  dateClearText: { color: '#ff4466', fontSize: 16 },
-  rowField: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  priorityRow: { flexDirection: 'row', gap: 8, marginBottom: 18 },
+  dateBtnText:  { color: '#e0e0ff', fontSize: 14 },
+  dateClear:    { padding: 10 },
+  dateClearText:{ color: '#ff4466', fontSize: 16 },
+  rowField:     { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  priorityRow:  { flexDirection: 'row', gap: 8, marginBottom: 18 },
   priorityBtn: {
-    flex: 1, paddingVertical: 8, borderRadius: 8,
-    borderWidth: 1, borderColor: '#1a1a35', alignItems: 'center',
+    flex: 1, borderRadius: 8,
+    borderWidth: 1, borderColor: '#1a1a35',
   },
+  priorityBtnInner: { paddingVertical: 8, alignItems: 'center' },
   priorityText: { color: '#333355', fontSize: 12 },
   modalActions: { flexDirection: 'row', gap: 10 },
   cancelBtn: {

@@ -230,6 +230,14 @@ export default function SignupScreen() {
     }
   };
 
+  const linkHover = useRef(new Animated.Value(0)).current;
+  const linkWeb   = Platform.OS === 'web'
+    ? {
+        onMouseEnter: () => Animated.timing(linkHover, { toValue: 1, duration: 150, useNativeDriver: true }).start(),
+        onMouseLeave: () => Animated.timing(linkHover, { toValue: 0, duration: 220, useNativeDriver: true }).start(),
+      }
+    : {};
+
   const spin = logoRotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
   const strength = strengthLevel(password);
 
@@ -346,12 +354,18 @@ export default function SignupScreen() {
           <GlowButton onPress={handleSignup} loading={loading} disabled={loading} />
         </View>
 
-        <Pressable onPress={() => router.push('/login')} style={s.link}>
-          <Text style={s.linkText}>
-            Já tem uma conta?{'  '}
-            <Text style={s.linkHighlight}>ENTRAR</Text>
-          </Text>
-        </Pressable>
+        <View style={[s.link, { borderRadius: 8, overflow: 'hidden' }]} {...linkWeb}>
+          <Animated.View
+            style={[StyleSheet.absoluteFillObject, { opacity: linkHover, backgroundColor: 'rgba(0,212,255,0.07)' }]}
+            pointerEvents="none"
+          />
+          <Pressable onPress={() => router.push('/login')} style={{ paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center' }}>
+            <Text style={s.linkText}>
+              Já tem uma conta?{'  '}
+              <Text style={s.linkHighlight}>ENTRAR</Text>
+            </Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
 
       {success && <SuccessOverlay onDone={() => router.replace('/login')} />}
