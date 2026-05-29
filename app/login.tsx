@@ -193,13 +193,13 @@ export default function LoginScreen() {
 
         <View style={[s.link, { borderRadius: 8, overflow: 'hidden' }]} {...linkWeb}>
           <Animated.View
-            style={[StyleSheet.absoluteFillObject, { opacity: linkHover, backgroundColor: 'rgba(124,58,237,0.08)' }]}
+            style={[StyleSheet.absoluteFillObject, { opacity: linkHover }]}
             pointerEvents="none"
           />
           <Pressable onPress={() => router.push('/signup')} style={{ paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center' }}>
-            <Text style={s.linkText}>
+            <Text>
               Não tem acesso?{'  '}
-              <Text style={s.linkHighlight}>CRIAR CONTA</Text>
+              <Text>CRIAR CONTA</Text>
             </Text>
           </Pressable>
         </View>
@@ -209,7 +209,7 @@ export default function LoginScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#050510' },
+  safe: { flex: 1, backgroundColor: '#100705' },
   glowBg: {
     position: 'absolute', top: -80, left: '50%', marginLeft: -180,
     width: 360, height: 360, borderRadius: 180,
@@ -217,7 +217,7 @@ const s = StyleSheet.create({
   },
   scanLine: {
     position: 'absolute', left: 0, right: 0, height: 2,
-    backgroundColor: 'rgba(0, 212, 255, 0.12)', zIndex: 999,
+    backgroundColor: 'rgba(204, 0, 255, 0.12)', zIndex: 999,
   },
   container: {
     flex: 1, paddingHorizontal: 24, justifyContent: 'center',
@@ -225,28 +225,28 @@ const s = StyleSheet.create({
   },
   header: { alignItems: 'center', marginBottom: 32 },
   logoIcon: {
-    fontSize: 40, color: '#00d4ff',
-    textShadowColor: '#00d4ff', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 20,
+    fontSize: 40, color: '#ff0000',
+    textShadowColor: '#ff004c', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 20,
     marginBottom: 8,
   },
   title: {
-    fontSize: 28, fontWeight: '900', color: '#00d4ff', letterSpacing: 10,
-    textShadowColor: '#00d4ff', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 12,
+    fontSize: 28, fontWeight: '900', color: '#e6e6e6', letterSpacing: 10,
+    textShadowColor: '#00ff1a', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 12,
   },
-  subtitle: { color: '#333355', fontSize: 10, letterSpacing: 3, marginTop: 4 },
+  subtitle: { color: '#ff0088', fontSize: 10, letterSpacing: 3, marginTop: 4 },
   card: {
-    backgroundColor: '#0a0a1a', borderRadius: 14,
-    borderWidth: 1, borderColor: '#1a1a35', padding: 22,
-    shadowColor: '#00d4ff', shadowOffset: { width: 0, height: 0 },
+    backgroundColor: '#6fff00', borderRadius: 14,
+    borderWidth: 1, borderColor: '#ffea00', padding: 22,
+    shadowColor: '#e5ff00', shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.12, shadowRadius: 20, elevation: 8,
   },
   cardTitle: { color: '#7c3aed', fontSize: 10, fontWeight: '700', letterSpacing: 4, marginBottom: 18 },
   fieldGroup: { marginBottom: 14 },
   label: { color: '#333355', fontSize: 9, fontWeight: '700', letterSpacing: 3, marginBottom: 6 },
   input: {
-    backgroundColor: '#08081a', borderWidth: 1, borderColor: '#1a1a35',
+    backgroundColor: '#0000ff', borderWidth: 1, borderColor: '#1a1a35',
     borderRadius: 8, paddingVertical: 12, paddingHorizontal: 14,
-    fontSize: 15, color: '#e0e0ff',
+    fontSize: 15, color: '#ff0000',
   },
   inputActive: { borderColor: '#00d4ff' },
   errorBox: {
@@ -257,18 +257,18 @@ const s = StyleSheet.create({
   errorIcon: { fontSize: 14, color: '#ff4466' },
   errorText: { color: '#ff4466', fontSize: 12, flex: 1, lineHeight: 18 },
   button: {
-    backgroundColor: '#00d4ff', paddingVertical: 15, borderRadius: 8,
+    backgroundColor: '#ff6325', paddingVertical: 15, borderRadius: 8,
     alignItems: 'center', marginTop: 6, overflow: 'hidden',
-    shadowColor: '#00d4ff', shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#3fff1d', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5, shadowRadius: 16, elevation: 8,
   },
-  buttonLoading: { backgroundColor: '#006680', shadowOpacity: 0 },
+  buttonLoading: { backgroundColor: '#fffb00', shadowOpacity: 0 },
   buttonGlow: {
     position: 'absolute', width: 140, height: 140, borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgb(250, 0, 0)',
   },
-  buttonText: { color: '#000', fontWeight: '900', fontSize: 14, letterSpacing: 3, zIndex: 1 },
+  buttonText: { color: '#b8b8b8', fontWeight: '900', fontSize: 14, letterSpacing: 3, zIndex: 1 },
   link: { marginTop: 24, alignItems: 'center' },
-  linkText: { color: '#333355', fontSize: 12, letterSpacing: 1 },
-  linkHighlight: { color: '#7c3aed', fontWeight: '700', letterSpacing: 2 },
+  linkText: { color: '#0000fe', fontSize: 12, letterSpacing: 1 },
+  linkHighlight: { color: '#5d00ff', fontWeight: '700', letterSpacing: 2 },
 });
